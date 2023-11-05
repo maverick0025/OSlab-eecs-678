@@ -1,0 +1,44 @@
+Operating Systems Lab 1
+Questions/Answers
+
+1.What is the main purpose of a debugger in programming and how would this tool help you in programming?
+Ans: Main purpose of a debugger is to debug/inspect a program at the runtime. It can also be stated as, running a program under the conditions set by the user to track the program’s execution. Debuggers are very important for Software Engineers in solving industry level problems as well. By placing the breakpoints at a few suspected lines of code, the information at a particular breakpoint can be inferred and is used for problem solving. 
+
+
+2.What were some of the commands that you used the most in debugger?
+Ans:  
+	•	f <frame number> to view the stack frame
+	•	l to point the particular frame 
+	•	r to run the program
+	•	info breakpoints to get information on all active breakpoints
+	•	c to continue the program
+	•	c 2 to accelerate the continue process exponentially
+	•	rwatch <code line> to set the watchpoint
+	•	b <line> to set the breakpoint
+	•	n  to go to the next line
+	•	ptype <parameter> to get the type of a parameter
+	•	p to get the info of that parameter
+	•	backtrace or bt to backtrace the error.
+
+3.When using the debugger for a segmentation fault, what schematic order would you follow?
+Ans:  First of all, we will compile the C program using the -g flag. Then run the gdb with the c file. Run the program and it will run until the segmentation fault shows up and then use the backtrace command to get the info about what’s causing the issue and access the frame pointer using frame pointer command from the stack frame. Find the problem and fix it.
+
+4.Which flag/debugging option is necessary when using the debugger?
+Ans: -g flag. It is necessary because it tells the compiler to generate debugging information.
+
+5.How does Valgrind help identify memory leaks in programs? What are some of the situations that can lead to memory leaks in C/C++?
+Ans: Valgrind shows all the possible memory leaks in the code when run with the commands like
+	•	--leak-check=full
+	•	--track-origins=yes
+	•	--show-leak-kinds=all
+	Valgrind helps in identifying the memory leaks by monitoring memory allocation and deallocation operations during the program execution/runtime. Some of the situations that can lead to memory leaks in C are
+	•	Failing to free the dynamically allocated memory or exiting the program without cleanup.
+	•	Losing track of pointers that reference dynamically allocated memory which prevents from freeing them later.
+	•	Freeing a memory twice or more.
+
+6.What are breakpoints and how can they help you while debugging?
+Ans: Breakpoints are a fundamental devugging tool used to pause the execution of a program at a specific point(line of a code) and inspect the program’s state and variables at that point. Breakpoints can also be used for profiling(measure how long it takes to reach certain points in the code).
+
+7.How does Valgrind's memcheck tool help detect uninitialized variable usage?
+Ans: Valgrind tracks the memory state of the program during its execution and flags any attempts to read from or write to memory locations that haven’t been properly initialized. Memcheck tool helps in catching potential sources of undefined behavior and bugs in the early development process that makes the programs robust.
+

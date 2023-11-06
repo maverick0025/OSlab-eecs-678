@@ -19,7 +19,10 @@
  */
 void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
 {
-
+  q->elements = malloc(sizeof(void*) * 10);
+  q->size =0;
+  q->capacity = 10;
+  q->comparer = comparer;
 }
 
 
@@ -32,7 +35,22 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
-	return -1;
+  //resizing it if needed
+  if(q->size >= q->capacity){
+    q->capacity *= 2;
+    q->elements = realloc(q->elements, sizeof(void*) * q-> capacity);
+  }
+
+  //insert based on priority as per comparator
+  int i;
+  for(i = q->size; i>0 && q->comparer(q->elements[i - 1], ptr) > 0; i--){
+    q->elements[i] = q->elements[i-1];
+  }
+
+    q->elements[i] = ptr;
+    q->size++;
+
+	return i;
 }
 
 
@@ -46,7 +64,11 @@ int priqueue_offer(priqueue_t *q, void *ptr)
  */
 void *priqueue_peek(priqueue_t *q)
 {
-	return NULL;
+  if(q->size == 0){
+    return NULL;
+  }
+	
+  return q->elements[0];
 }
 
 
@@ -60,7 +82,16 @@ void *priqueue_peek(priqueue_t *q)
  */
 void *priqueue_poll(priqueue_t *q)
 {
-	return NULL;
+  if(q->size ==0){
+    return NULL;
+  }
+
+  void* frontElement = q->elements[0];
+  for(int i = 1; i< q->size; i++){
+    q->elements[i-1] = q->elements[i];
+  }
+  q->size--;
+	return frontElement;
 }
 
 
@@ -75,7 +106,11 @@ void *priqueue_poll(priqueue_t *q)
  */
 void *priqueue_at(priqueue_t *q, int index)
 {
-	return NULL;
+  if(index<0 || index >= q->size){
+    return NULL;
+  }
+
+	return q->elements[index];
 }
 
 
@@ -90,7 +125,19 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-	return 0;
+  int removed =0;
+  for(int i =0; i< q->size; i++){
+    if(q->elements[i] == ptr){
+      for(int j =i; j< q->size -1; j++){
+        q->elements[j] = q->elements[j+1];
+      }
+      q->size = q->size -1;
+      removed += 1;
+      i--;
+    }
+  }
+
+	return removed;
 }
 
 
@@ -105,7 +152,16 @@ int priqueue_remove(priqueue_t *q, void *ptr)
  */
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
-	return 0;
+	if (index < 0 || index >= q->size) return NULL;
+  
+  void* removedElement = q->elements[index];
+  for (int i = index; i < q->size - 1; i++) {
+    q->elements[i] = q->elements[i + 1];
+  }
+  
+  q->size--;
+
+  return removedElement;
 }
 
 
@@ -117,7 +173,7 @@ void *priqueue_remove_at(priqueue_t *q, int index)
  */
 int priqueue_size(priqueue_t *q)
 {
-	return 0;
+	return q->size;
 }
 
 
@@ -128,5 +184,9 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-
+  free(q->elements);
+  q->elements = NULL;
+  q->size = 0;
+  q->capacity = 0;
+  q->comparer = NULL;
 }

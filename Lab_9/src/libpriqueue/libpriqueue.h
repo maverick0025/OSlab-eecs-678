@@ -9,12 +9,13 @@
 */
 typedef struct _priqueue_t
 {
-  void** values;
+  void **m_q;
+  int(*comparer)(const void *, const void *);
+  int front, rear;
   int size;
-  int capacity;
-  int (*comparer)(const void *, const void *);
 } priqueue_t;
 
+extern int difcompare;
 
 void   priqueue_init     (priqueue_t *q, int(*comparer)(const void *, const void *));
 
@@ -27,5 +28,6 @@ void * priqueue_remove_at(priqueue_t *q, int index);
 int    priqueue_size     (priqueue_t *q);
 
 void   priqueue_destroy  (priqueue_t *q);
+void   resize            (priqueue_t *q);
 
 #endif /* LIBPQUEUE_H_ */

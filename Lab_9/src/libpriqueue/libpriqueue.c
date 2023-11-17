@@ -17,12 +17,14 @@
   @param comparer a function pointer that compares two elements.
   See also @ref comparer-page
  */
+int difcompare;
 void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
 {
-  q->values = malloc(sizeof(void*) * 10);
-  q->size =0;
-  q->capacity = 10;
+  difcompare = 0;
+  q->front = q->rear = -1;
   q->comparer = comparer;
+  q->size = 100;
+  q->m_q = malloc(100*sizeof(void*));
 }
 
 
@@ -35,21 +37,43 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
-  //resizing it if needed
-  if(q->size >= q->capacity){
-    q->capacity *= 2;
-    q->values = realloc(q->values, sizeof(void*) * q-> capacity);
+  if(q->rear >= q->size - 1){
+    resize(q);
   }
-
-  //insert based on priority as per comparator
-  int i;
-  for(i = q->size; i>0 && q->comparer(q->values[i - 1], ptr) > 0; i--){
-    q->values[i] = q->values[i-1];
+  if((q->front == -1) && (q->rear == -1)){
+    q->front++;
+    q->rear++;
+    q->m_q[q->rear] = ptr;
+    return q->rear;
   }
+  
+  
+  
+  int i,j;
+ 
+  for (i = 0; i <= q->rear; i++)
+  {
+      //if (ptr >= q->m_q[i])
+      if(q->comparer(q->m_q[i], ptr) > -1)
+      {
+          if(difcompare == 0){
+            while(i <= q->rear && q->comparer(q->m_q[i], ptr) == 0){
+              i = i+1;
+            }
+          }
+          
+          for (j = q->rear + 1; j > i; j--)
+          {
+              q->m_q[j] = q->m_q[j - 1];
+          }
+          q->m_q[i] = ptr;
+          q->rear++;
+          return i;
+      }
+  }
+  q->m_q[i] = ptr;
 
-    q->values[i] = ptr;
-    q->size++;
-
+  q->rear++;
 	return i;
 }
 
@@ -64,11 +88,10 @@ int priqueue_offer(priqueue_t *q, void *ptr)
  */
 void *priqueue_peek(priqueue_t *q)
 {
-  if(q->size == 0){
-    return NULL;
+  if(q->rear != -1){
+    return q->m_q[0];
   }
-	
-  return q->values[0];
+	return NULL;
 }
 
 
@@ -82,16 +105,7 @@ void *priqueue_peek(priqueue_t *q)
  */
 void *priqueue_poll(priqueue_t *q)
 {
-  if(q->size ==0){
-    return NULL;
-  }
-
-  void* frontElement = q->values[0];
-  for(int i = 1; i< q->size; i++){
-    q->values[i-1] = q->values[i];
-  }
-  q->size--;
-	return frontElement;
+	return priqueue_remove_at(q, 0);
 }
 
 
@@ -106,11 +120,10 @@ void *priqueue_poll(priqueue_t *q)
  */
 void *priqueue_at(priqueue_t *q, int index)
 {
-  if(index<0 || index >= q->size){
-    return NULL;
+  if(index <= q->rear){
+    return q->m_q[index];
   }
-
-	return q->values[index];
+	return NULL;
 }
 
 
@@ -125,19 +138,18 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-  int removed =0;
-  for(int i =0; i< q->size; i++){
-    if(q->values[i] == ptr){
-      for(int j =i; j< q->size -1; j++){
-        q->values[j] = q->values[j+1];
-      }
-      q->size = q->size -1;
-      removed += 1;
+  int sum = 0;
+  if(q->front == -1 && q->rear == -1){
+    return 0;
+  }
+  for(int i = q->front; i < q->rear; i++){
+    if(ptr == q->m_q[i]){
+      sum++;
+      priqueue_remove_at(q, i);
       i--;
     }
   }
-
-	return removed;
+	return sum;
 }
 
 
@@ -152,16 +164,24 @@ int priqueue_remove(priqueue_t *q, void *ptr)
  */
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
-	if (index < 0 || index >= q->size) return NULL;
-  
-  void* removedElement = q->values[index];
-  for (int i = index; i < q->size - 1; i++) {
-    q->values[i] = q->values[i + 1];
+  if ((q->front==-1) && (q->rear==-1))
+  {
+    //printf("\nQueue is empty no elements to delete");
+    return NULL;
   }
-  
-  q->size--;
-
-  return removedElement;
+  if(index > q->rear || index < 0){
+    return NULL;
+  }
+  int i = index;
+  void* result = q->m_q[index];
+  for(; i < q->rear; i++){
+    q->m_q[i] = q->m_q[i+1];
+  }
+  q->rear--;
+  if(q->rear == -1){
+    q->front = -1;
+  }
+  return result;
 }
 
 
@@ -173,7 +193,7 @@ void *priqueue_remove_at(priqueue_t *q, int index)
  */
 int priqueue_size(priqueue_t *q)
 {
-	return q->size;
+	return q->rear + 1;
 }
 
 
@@ -184,9 +204,13 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-  free(q->values);
-  q->values = NULL;
-  q->size = 0;
-  q->capacity = 0;
-  q->comparer = NULL;
+  free(q->m_q);
+}
+
+void resize(priqueue_t *q){
+  void** new_q = malloc(q->size*sizeof(void*));
+  for(int i = 0; i < q->rear; i++){
+    new_q[i] = q->m_q[i];
+  }
+  q->m_q = new_q;
 }

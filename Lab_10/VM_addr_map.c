@@ -33,9 +33,9 @@ int main(int argc, char *argv[])
     }
 
     /* Calculate the number of pages and frames */
-    num_pages = pow(2, log_size - d) / pow(2, page_size - d);
-    num_frames = pow(2, phy_size - d) / pow(2, page_size - d);
-
+    num_pages = 1 << (log_size - page_size);
+    num_frames = 1 << (phy_size - page_size);
+    
     /* Allocate arrays to hold the page table and memory frames map */
     page_table = (int *)malloc(num_pages * sizeof(int));
     mem_map = (int *)malloc(num_frames * sizeof(int));
@@ -62,8 +62,8 @@ int main(int argc, char *argv[])
         fprintf(stdout, "\nLogical address: 0x%x\n", logical_addr);
 
         /* Calculate page number and offset from the logical address */
-        page_num = logical_addr / pow(2, page_size);
-        offset = logical_addr % (int)pow(2, page_size);
+        page_num = logical_addr >> page_size;  //right shift by page size
+        offset = logical_addr & ((1 << page_size) - 1); // masking
 
         printf("Page Number: %d\n", page_num);
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 
         /* Form corresponding physical address */
         frame_num = page_table[page_num];
-        physical_addr = frame_num * pow(2, page_size) + offset;
+        physical_addr = (frame_num << page_size) | offset; // leftshift frame number to page size 
 
         fprintf(stdout, "Physical address: 0x%x\n", physical_addr);
 
